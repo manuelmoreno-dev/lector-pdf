@@ -1,51 +1,91 @@
 # 📚 Lector PDF Inteligente & Audiolibro
 
-Un lector de libros en formato PDF y reproductor de audiolibros interactivo, móvil y moderno, diseñado en **React Native** con **Expo**. La aplicación combina la lectura fluida con herramientas de **Inteligencia Artificial**, gamificación de hábitos de lectura y sincronización de portadas oficiales.
+<p align="center">
+  <img src="https://img.shields.io/badge/React_Native-0.86-61DAFB?style=for-the-badge&logo=react" alt="React Native" />
+  <img src="https://img.shields.io/badge/Expo-57.0-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo" />
+  <img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Licencia-MIT-green?style=for-the-badge" alt="Licencia" />
+  <img src="https://img.shields.io/badge/Android-Listo-3DDC84?style=for-the-badge&logo=android" alt="Android" />
+</p>
+
+Una aplicación móvil y web premium de lectura de PDFs y reproducción de audiolibros, potenciada con **Inteligencia Artificial** para explicaciones y resúmenes, y un sistema **gamificado de metas de lectura y rachas** para motivar el hábito diario.
 
 ---
 
-## 🚀 Características Principales
+## 🎨 Arquitectura de la Aplicación
 
-### 📖 Lector & Audiolibro Interactivo
-* **Motor de PDF Dual**: Renderizado nativo fluido de PDFs con gestos de zoom y scroll en compilaciones standalone (`react-native-pdf`), junto con un simulador fallback inteligente para entornos de desarrollo en **Expo Go**.
-* **Audio-Narración (TTS)**: Escucha tus libros favoritos con controles de reproducción (reproducir, pausar, adelantar y retroceder página) mediante el sintetizador de voz nativo de tu dispositivo.
-* **Tipografías Personalizables**: Cambia de fuente de lectura al instante entre 4 familias premium (*Serif*, *Sans-Serif*, *Monospace*, *Sans-Serif-Light*) y ajusta el tamaño del texto.
-* **Brillo y Modos de Lectura**: Soporte para temas **Claro**, **Oscuro** y **Sepia (Cálido)** ideales para lecturas nocturnas, con control deslizante de brillo integrado.
-* **Lectura Inmersiva**: Modo de pantalla completa ocultando controles y barras del sistema. Sal de este modo haciendo doble clic en cualquier parte de la pantalla.
+El siguiente diagrama muestra el flujo interactivo de la app, desde la importación del PDF hasta la sincronización de datos con la IA y la base de datos persistente:
 
-### 🧠 Asistente de Lectura con IA
-* **Explicar Conceptos**: ¿Encontraste una palabra difícil? Escríbela dentro del lector y la IA te proporcionará una definición y contexto al instante.
-* **Resumir Páginas**: Obtén un resumen condensado en puntos clave de la página actual que estás leyendo con un solo toque.
-
-### 🎨 Biblioteca Inteligente & Editor de Portadas
-* **Metadatos e Imágenes Automáticas**: Al importar un PDF, la app lee su información interna y busca en internet la portada original del libro y su autor.
-* **Descarga Local Offline**: Las portadas encontradas se descargan localmente en el almacenamiento del dispositivo, permitiéndote navegar por tu estantería 100% sin conexión a internet.
-* **Edición Híbrida (Manual + IA)**: Corrige manualmente el título y autor con un formulario vertical espacioso, o deja que el buscador de OpenLibrary encuentre la ficha oficial del libro y su portada.
-* **Carga de Portadas desde Galería**: Elige cualquier imagen desde la galería de tu celular para asignarla como portada de tu libro.
-
-### 🏆 Gamificación & Hábitos (Rachas)
-* **Meta Diaria de Lectura**: Configura tus minutos de lectura propuestos para hoy (5, 10, 15 o 30 min) mediante un modal de bienvenida diario.
-* **Racha de Días (Streaks)**: Mantén tu racha de días de lectura consecutivos activa. Se muestra un indicador de fuego (`🔥 3 días`) en tu biblioteca como motivación.
-* **Dashboard de Estadísticas**: Monitorea tu racha, los minutos totales leídos hoy y tu barra de progreso diario en la pestaña **Explorar**.
-* **Estantería de Completados**: Una sección especial que reúne todos los libros que has terminado al 100%, con opción de releerlos cuando gustes.
+```mermaid
+graph TD
+    User([Lector/Usuario]) -->|Importa PDF| Bookshelf[Estantería de Libros]
+    Bookshelf -->|IA: OpenLibrary API| MetaSync{Sincronizador}
+    MetaSync -->|Éxito| LocalStorage[(Almacenamiento Local: Portada & Info)]
+    MetaSync -->|Edición Manual| EditModal[Modal de Edición Directa]
+    EditModal --> LocalStorage
+    
+    Bookshelf -->|Toca un Libro| Reader[Lector de PDF / Audio Narrador]
+    
+    Reader -->|Asistente de IA| AI[Resumen & Definición de Conceptos]
+    Reader -->|Progreso Activo| GoalCheck{¿Meta Completada?}
+    GoalCheck -->|Sí| Celebration[Notificación de Meta Completada]
+    GoalCheck -->|Incrementa Tiempo| StreakEngine[Motor de Rachas 🔥]
+    StreakEngine -->|Sincroniza| ExploreTab[Pestaña de Estadísticas]
+    
+    LocalStorage -->|Filtro progress >= 100%| CompletedShelf[Estantería de Completados 🏆]
+```
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## ✨ Características Premium
 
-* **Framework**: React Native & Expo (SDK 57)
-* **Enrutador**: Expo Router (unstable-native-tabs)
-* **Almacenamiento Local**: `@react-native-async-storage/async-storage`
-* **Manejo de Archivos**: `expo-file-system` & `expo-document-picker`
-* **Narración de Voz**: `expo-speech`
-* **Renderizado PDF**: `react-native-pdf` & `react-native-blob-util`
-* **Componentes Visuales**: `lucide-react-native` & `expo-image`
+### 📖 Lector Inmersivo de Alta Fidelidad
+* **Modo Pantalla Completa**: Oculta todos los menús para una lectura limpia. Sal del modo inmersivo con solo hacer **dos clics (doble tap)** en la pantalla.
+* **Tipografías de Libro Oficiales**: Cambia cíclicamente de fuente entre **Serif** (estilo papel clásico), **Sans** (minimalista y limpio), **Mono** (para códigos y técnicos) y **Fina** (estilo ultra delgado y elegante).
+* **Temas Personalizados**: Ajusta la paleta de color al instante para cuidar tu vista:
+  * **Claro**: Fondo brillante y texto nítido.
+  * **Sepia**: Tonalidad cálida y relajante, ideal para luz de día moderada.
+  * **Oscuro**: Fondo negro OLED para lecturas nocturnas sin fatiga.
+
+### 🎧 Narrador de Audiolibro Inteligente
+* **Texto a Voz (TTS)**: Motor de audio integrado que lee la página actual en voz alta usando la voz oficial de tu sistema operativo.
+* **Controles de Reproducción**: Reproduce, pausa, avanza de página o retrocede de manera interactiva con un panel flotante.
+
+### 🧠 Copiloto de Lectura con IA
+* **Explicador de Conceptos**: Selecciona o ingresa una palabra que no entiendas y la IA te proporcionará una definición y contexto de inmediato sin salir de la lectura.
+* **Resúmenes en Un Clic**: Obtén los puntos más importantes de tu página de lectura estructurados en un formato de viñetas muy legible.
+
+### 🏆 Gamificación y Control de Rachas
+* **Planificación Diaria**: Al abrir la app, selecciona tus minutos propuestos de lectura para hoy (5, 10, 15 o 30 minutos).
+* **Insignia de Racha (`🔥`)**: Un indicador de fuego en tu biblioteca muestra tus días de racha acumulados de forma consecutiva.
+* **Reinicios Inteligentes**: Si dejas de leer un día completo, la racha se reinicia a cero a la medianoche, fomentando la constancia diaria.
+* **Pestaña Explorar**: Revisa tu progreso diario, porcentaje de la meta cumplida hoy y tus rachas acumuladas en un panel gráfico muy vistoso.
+* **Libros Completados**: Sección dedicada que archiva de forma ordenada todos los libros que has leído al 100%.
+
+### 🖼️ Portadas y Metadatos Automáticos
+* **Buscador IA**: Al importar un libro, el motor detecta el título interno y busca en internet la carátula oficial y el autor del libro.
+* **Editor de Portadas**: Permite cargar cualquier imagen de la galería de tu celular para usarla como carátula de tu PDF.
+* **Spacious Form**: Un formulario de edición vertical con amplio espacio para escribir y ajustar los datos cómodamente.
 
 ---
 
-## 📦 Instalación y Uso Local
+## 🛠️ Stack Tecnológico
 
-Sigue estos pasos para clonar el repositorio y ejecutar la aplicación en modo de desarrollo:
+| Módulo | Tecnología / Dependencia |
+| :--- | :--- |
+| **Núcleo Móvil** | React Native (v0.86) & Expo (SDK 57) |
+| **Enrutamiento** | Expo Router |
+| **Persistencia** | `@react-native-async-storage/async-storage` |
+| **Sistema de Archivos**| `expo-file-system` & `expo-document-picker` |
+| **Audio Narración** | `expo-speech` |
+| **Iconografía** | `lucide-react-native` |
+| **Motor de Imágenes** | `expo-image` |
+
+---
+
+## 🚀 Guía de Instalación y Configuración
+
+Sigue estos pasos para clonar el repositorio y levantar la aplicación en tu celular en menos de 5 minutos:
 
 ### 1. Clonar el repositorio
 ```bash
@@ -58,32 +98,32 @@ cd lector-pdf
 npm install
 ```
 
-### 3. Iniciar el servidor de desarrollo de Expo
+### 3. Iniciar el entorno de desarrollo
 ```bash
 npx expo start
 ```
-* Presiona **`a`** para abrir en un emulador de Android.
-* Escanea el **código QR** desde tu celular con la aplicación de **Expo Go** para probarlo en vivo.
+* Escanea el **código QR** desde tu celular usando la aplicación de **Expo Go** para verlo en vivo al instante.
+* Presiona **`r`** en la consola si deseas recargar el código en caliente.
 
 ---
 
-## 📱 Compilar el APK con Expo EAS (Servidores Cloud)
+## 📦 Compilación Cloud de tu APK (Expo EAS)
 
-Para generar el archivo de instalación `.apk` directamente en los servidores en la nube de Expo (sin necesidad de Android Studio local):
+Para generar el archivo ejecutable `.apk` en los servidores en la nube de Expo de forma gratuita y sin configurar SDKs en tu computadora:
 
-1. **Instala la CLI de EAS de forma global**:
+1. **Instala la CLI de EAS**:
    ```bash
    npm install -g eas-cli
    ```
-2. **Inicia sesión en tu cuenta de Expo**:
+2. **Inicia sesión en Expo**:
    ```bash
    eas login
    ```
-3. **Inicia la compilación del APK**:
+3. **Ejecuta la compilación**:
    ```bash
    eas build --platform android --profile preview
    ```
-4. Al finalizar la compilación en la nube (5-10 minutos), el terminal te mostrará un **código QR** y un enlace para descargar tu APK e instalarlo en tu celular.
+* Al finalizar el proceso en la nube, la terminal te devolverá un **Código QR** y un enlace. Escanea el código con tu celular para descargar e instalar tu APK directamente.
 
 ---
 
