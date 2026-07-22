@@ -46,7 +46,8 @@ import { Colors, Spacing } from '../constants/theme';
 let PdfComponent: any = null;
 try {
   if (!isExpoGo()) {
-    PdfComponent = require('react-native-pdf').default;
+    const pdfModule = require('react-native-pdf');
+    PdfComponent = pdfModule.default || pdfModule;
   }
 } catch (e) {
   console.warn('Native PDF module could not be loaded. Running in simulation mode.');
@@ -222,6 +223,7 @@ export default function ReaderModal({
         language: 'es-MX',
         rate: speechRate,
         onDone: () => setIsPlayingSpeech(false),
+        onStopped: () => setIsPlayingSpeech(false),
         onError: (err) => {
           console.error(err);
           setIsPlayingSpeech(false);

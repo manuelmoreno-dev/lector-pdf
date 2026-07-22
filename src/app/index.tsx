@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -167,7 +167,9 @@ export default function HomeScreen() {
       if (result) {
         setEditableTitle(result.title);
         setEditableAuthor(result.author);
-        setEditableCoverUrl(result.coverUrl);
+        if (result.coverUrl) {
+          setEditableCoverUrl(result.coverUrl);
+        }
         setEditableWorkKey(result.workKey);
       }
     } catch (e) {
@@ -206,17 +208,25 @@ export default function HomeScreen() {
         const coverFilename = `${metadataBookTarget.id}_cover.jpg`;
         const coverDest = `${FileSystem.documentDirectory}books/${coverFilename}`;
         
-        if (editableCoverUrl.startsWith('file://')) {
-          // Copy manually picked local gallery image from cache to books folder
+        // Ensure books/ directory exists before saving cover
+        const booksDir = `${FileSystem.documentDirectory}books/`;
+        const dirInfo = await FileSystem.getInfoAsync(booksDir);
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(booksDir, { intermediates: true });
+        }
+
+        const isRemoteUrl = editableCoverUrl.startsWith('http://') || editableCoverUrl.startsWith('https://');
+        if (isRemoteUrl) {
+          // Download remote image (OpenLibrary search result)
+          const downloadResult = await FileSystem.downloadAsync(editableCoverUrl, coverDest);
+          finalCoverUrl = downloadResult.uri;
+        } else {
+          // Copy local image (file://, content://, cache://, etc.) to books folder
           await FileSystem.copyAsync({
             from: editableCoverUrl,
             to: coverDest,
           });
           finalCoverUrl = coverDest;
-        } else {
-          // Download remote image search result
-          const downloadResult = await FileSystem.downloadAsync(editableCoverUrl, coverDest);
-          finalCoverUrl = downloadResult.uri;
         }
       } catch (err) {
         console.error('Error saving new cover:', err);
@@ -232,6 +242,11 @@ export default function HomeScreen() {
         workKey: editableWorkKey,
       });
       setBooks(updatedBooks);
+      // Sync selectedBook if it's the same book we just edited
+      if (selectedBook && selectedBook.id === metadataBookTarget.id) {
+        const match = updatedBooks.find(b => b.id === metadataBookTarget.id);
+        if (match) setSelectedBook(match);
+      }
       setMetadataModalVisible(false);
       Alert.alert('Éxito', 'Se actualizó la información de tu libro.');
     } catch (err) {
@@ -460,7 +475,7 @@ export default function HomeScreen() {
           transparent={true}
           onRequestClose={() => setGoalModalVisible(false)}>
           <View style={styles.modalOverlay}>
-            <ThemedView type="card" style={styles.goalCard}>
+            <ThemedView type="backgroundElement" style={styles.goalCard}>
               <View style={styles.goalIconContainer}>
                 <Flame color="#F59E0B" size={40} fill="#F59E0B" />
               </View>
@@ -501,7 +516,7 @@ export default function HomeScreen() {
           transparent={true}
           onRequestClose={() => setMetadataModalVisible(false)}>
           <View style={styles.modalOverlay}>
-            <ThemedView type="card" style={styles.metadataCard}>
+            <ThemedView type="backgroundElement" style={styles.metadataCard}>
               {/* Header */}
               <View style={styles.metadataHeader}>
                 <ThemedText type="subtitle" style={styles.metadataTitle}>
@@ -524,7 +539,7 @@ export default function HomeScreen() {
                   value={metadataSearchQuery}
                   onChangeText={setMetadataSearchQuery}
                   onSubmitEditing={() => handleMetadataSearch(metadataSearchQuery)}
-                  style={[styles.searchInput, { color: activeColors.text, borderColor: activeColors.border, backgroundColor: activeColors.background }]}
+                  style={[styles.searchInput, { color: activeColors.text, borderColor: activeColors.backgroundSelected, backgroundColor: activeColors.background }]}
                 />
                 <TouchableOpacity 
                   style={[styles.searchBtn, { backgroundColor: '#4F46E5' }]}
@@ -547,7 +562,7 @@ export default function HomeScreen() {
                     {/* Centered Cover Preview */}
                     <View style={styles.coverPreviewContainer}>
                       <TouchableOpacity 
-                        style={[styles.coverPreviewLarge, { backgroundColor: '#4F46E510', borderColor: activeColors.border }]}
+                        style={[styles.coverPreviewLarge, { backgroundColor: '#4F46E510', borderColor: activeColors.backgroundSelected }]}
                         onPress={handlePickCoverImage}>
                         {editableCoverUrl ? (
                           <Image 
@@ -574,7 +589,7 @@ export default function HomeScreen() {
                         onChangeText={setEditableTitle}
                         placeholder="Escribe el título..."
                         placeholderTextColor={activeColors.textSecondary}
-                        style={[styles.editableFormInputLarge, { color: activeColors.text, borderColor: activeColors.border, backgroundColor: activeColors.background }]}
+                        style={[styles.editableFormInputLarge, { color: activeColors.text, borderColor: activeColors.backgroundSelected, backgroundColor: activeColors.background }]}
                       />
                       
                       <ThemedText type="code" style={styles.formLabel}>
@@ -585,7 +600,7 @@ export default function HomeScreen() {
                         onChangeText={setEditableAuthor}
                         placeholder="Escribe el autor..."
                         placeholderTextColor={activeColors.textSecondary}
-                        style={[styles.editableFormInputLarge, { color: activeColors.text, borderColor: activeColors.border, backgroundColor: activeColors.background }]}
+                        style={[styles.editableFormInputLarge, { color: activeColors.text, borderColor: activeColors.backgroundSelected, backgroundColor: activeColors.background }]}
                       />
                     </View>
                   </View>
@@ -595,7 +610,7 @@ export default function HomeScreen() {
               {/* Actions */}
               <View style={styles.actionsRow}>
                 <TouchableOpacity 
-                  style={[styles.cancelBtn, { borderColor: activeColors.border }]} 
+                  style={[styles.cancelBtn, { borderColor: activeColors.backgroundSelected }]} 
                   onPress={() => setMetadataModalVisible(false)}>
                   <ThemedText type="smallBold" style={{ color: activeColors.textSecondary }}>Rechazar</ThemedText>
                 </TouchableOpacity>

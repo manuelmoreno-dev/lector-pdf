@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,10 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  TrendingUp,
   Award,
   BookOpen,
-  Calendar,
   Flame,
   Sparkles,
   HelpCircle,
@@ -55,13 +53,13 @@ export default function ExploreScreen() {
     }, [])
   );
 
-  const fetchStats = async () => {
-    setLoading(true);
+  const fetchStats = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     const loadedBooks = await loadBooks();
     setBooks(loadedBooks);
     const streak = await getStreakData();
     setStreakData(streak);
-    setLoading(false);
+    if (showLoading) setLoading(false);
   };
 
   const insets = {
@@ -76,6 +74,12 @@ export default function ExploreScreen() {
       paddingRight: insets.right,
       paddingBottom: insets.bottom,
     },
+    ios: {
+      paddingTop: safeAreaInsets.top,
+      paddingLeft: safeAreaInsets.left,
+      paddingRight: safeAreaInsets.right,
+      paddingBottom: insets.bottom,
+    },
     web: {
       paddingTop: Spacing.six,
       paddingBottom: Spacing.four,
@@ -84,13 +88,13 @@ export default function ExploreScreen() {
 
   // Calculate statistics
   const totalBooks = books.length;
-  const completedBooks = books.filter((b) => b.progress >= 1.0);
+  const completedBooks = books.filter((b) => b.progress >= 0.99 || b.lastPage >= b.totalPages);
   const finishedBooks = completedBooks.length;
   const inProgressBooks = books.filter((b) => b.progress > 0.0 && b.progress < 1.0).length;
   
   // Calculate simulated reading time (15 mins per 10% progress of any book)
   const totalReadingMinutes = Math.round(
-    books.reduce((acc, b) => acc + (b.progress * (b.totalPages * 1.5 || 30)), 0)
+    books.reduce((acc, b) => acc + ((b.progress ?? 0) * ((b.totalPages || 10) * 1.5)), 0)
   );
 
   const dailyGoalMinutes = streakData?.goalMinutes || 15;
@@ -296,7 +300,7 @@ export default function ExploreScreen() {
             <SafeAreaView style={styles.modalSafeArea}>
               
               {/* HEADER */}
-              <View style={[styles.modalHeader, { borderBottomColor: activeColors.border }]}>
+              <View style={[styles.modalHeader, { borderBottomColor: activeColors.backgroundSelected }]}>
                 <TouchableOpacity onPress={() => setCompletedModalVisible(false)} style={styles.modalBackBtn}>
                   <ArrowLeft color={activeColors.text} size={24} />
                 </TouchableOpacity>
@@ -323,7 +327,7 @@ export default function ExploreScreen() {
                   keyExtractor={(item) => item.id}
                   renderItem={({ item }) => (
                     <TouchableOpacity 
-                      style={[styles.modalBookCard, { backgroundColor: activeColors.card, borderColor: activeColors.border }]}
+                      style={[styles.modalBookCard, { backgroundColor: activeColors.backgroundElement, borderColor: activeColors.backgroundSelected }]}
                       onPress={() => {
                         setSelectedBook(item);
                         setReaderVisible(true);
@@ -381,11 +385,14 @@ export default function ExploreScreen() {
             onClose={() => {
               setReaderVisible(false);
               setSelectedBook(null);
-              fetchStats(); // reload stats when done reading
+              fetchStats(false); // reload stats quietly when done reading
             }}
             onProgressUpdate={async (bookId, lastPage, totalPages) => {
               await updateBookProgress(bookId, lastPage, totalPages);
-              fetchStats();
+              setSelectedBook((prev) =>
+                prev ? { ...prev, lastPage, totalPages, progress: totalPages > 1 ? (lastPage - 1) / (totalPages - 1) : 1 } : null
+              );
+              fetchStats(false);
             }}
           />
         </Modal>
